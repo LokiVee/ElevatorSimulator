@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-internal class ElevatorStateContext
+internal class ElevatorStateContext 
 {
     public readonly Elevator Elevator;
     private readonly Action _stateHasChanged;
     private IState _currentState;
     internal List<Request> _requests = new List<Request>();
     private Request _currentRequest;
-
+    internal List<Request> _onboardRequests = new List<Request>(); // Requests for passengers already picked up
     public ElevatorStateContext(Elevator elevator, Action stateHasChanged)
     {
         Elevator = elevator;
@@ -36,7 +36,7 @@ internal class ElevatorStateContext
 
     public void StateHasChanged()
     {
-        Elevator.CurrentCapacity = _currentRequest?.ObjectWaiting ?? 0;
+        Elevator.CurrentCapacity = _onboardRequests.Sum(r => r.ObjectWaiting); // Update based on total onboard passengers
         _stateHasChanged.Invoke();
     }
 
@@ -44,15 +44,19 @@ internal class ElevatorStateContext
 
     public bool CanHandleRequest(Request request)
     {
-        //Do the check
-        return request.ObjectWaiting < Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);
+        ////Do the check
+        //return request.ObjectWaiting < Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);
+        var capacityCheck = request.ObjectWaiting <= Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);
+        return capacityCheck;
+
     }
 
     public async Task HandleRequest(Request request)
     {
         _requests.Add(request);
-        //TODO this thightly couples and must be removed
-        Console.WriteLine($"{DateTime.Now} - Process request {_requests.Count} on {Elevator}");
+
+        // Log the incoming request
+        Console.WriteLine($"{DateTime.Now} - Processing request {_requests.Count} on {Elevator}");
         await ProcessNextRequest();
     }
 
@@ -66,9 +70,16 @@ internal class ElevatorStateContext
     {
         if (_currentState is IdleState && _requests.Any())
         {
-            _currentRequest = _requests.First();
-            _requests.RemoveAt(0);
+            // Sort requests by the most efficient route (e.g., in the current direction of travel)
+            _currentRequest = FindNextOptimalRequest();
             await ProcessRequest(_currentRequest);
         }
     }
+
+    private Request FindNextOptimalRequest()
+    {
+        // Return the closest request by current floor, prioritizing direction alignment (MovingUp or MovingDown)
+        return _requests.OrderBy(r => Math.Abs(r.CurrentFloor - Elevator.CurrentFloor)).First();
+    }
+
 }

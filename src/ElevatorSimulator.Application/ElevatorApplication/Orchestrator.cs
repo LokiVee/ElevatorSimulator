@@ -2,6 +2,7 @@
 using ElevatorSimulator.Application.Features.Requests.Commands;
 using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain.Entities;
+using ElevatorSimulator.Domain.Enums;
 using Microsoft.Extensions.Hosting;
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
@@ -88,11 +89,23 @@ internal class Orchestrator : IHostedLifecycleService
     }
     //BUG:  in finding optimal elevator
     public Elevator FindBestElevator(Request request)
-    { 
-        var bestElevator = _elevators
-            .Where(elevator => _elevatorContext[elevator].CanHandleRequest(request))
+    {
+        // Filter elevators that can handle the request and are not busy
+        var availableElevators = _elevators
+            .Where(elevator => _elevatorContext[elevator].CanHandleRequest(request) &&
+                              elevator.Status == ElevatorStatus.Idle) // Check if elevator is idle
+            .ToList();
+
+        if (!availableElevators.Any())
+        {
+            // If no elevators are available, you might want to return null or implement a waiting mechanism
+            return null;
+        }
+
+        // Find the closest elevator to the requested floor
+        var bestElevator = availableElevators
             .OrderBy(elevator => Math.Abs(elevator.CurrentFloor - request.CurrentFloor))
-            .ThenBy(elevator => elevator.CurrentFloor)
+            .ThenBy(elevator => elevator.CurrentFloor) 
             .FirstOrDefault();
 
         return bestElevator;

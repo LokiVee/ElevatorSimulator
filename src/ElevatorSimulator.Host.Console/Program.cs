@@ -73,6 +73,16 @@ internal class Program
                 });
                 await _mediator.Publish(notificaiton);
                 break;
+            case "2":
+                //Did this with some menu thing
+                var notificaiton1 = new ElevatorRequestCreate(new Request
+                {
+                    CurrentFloor = 4,
+                    TargetFloor = 6,
+                    ObjectWaiting = 2
+                });
+                await _mediator.Publish(notificaiton1);
+                break;
         }
     }
 

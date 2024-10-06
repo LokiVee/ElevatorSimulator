@@ -28,15 +28,43 @@ internal class DropOffState : IState
     {
         do
         {
-            await Task.Delay(3000);
+            await Task.Delay(3000); // Simulate movement delay
+
+            // Move the elevator in the current direction
             if (_direction == ElevatorStatus.MovingUp)
                 context.Elevator.CurrentFloor++;
             else
                 context.Elevator.CurrentFloor--;
 
             context.StateHasChanged();
+
+            // Check if we need to drop off passengers on the current floor
+            var dropOffRequest = context._onboardRequests
+                .FirstOrDefault(r => r.TargetFloor == context.Elevator.CurrentFloor);
+
+            if (dropOffRequest != null)
+            {
+                await DropOffPassengers(context, dropOffRequest);
+                context._onboardRequests.Remove(dropOffRequest); // Remove dropped-off request
+            }
+
         } while (context.Elevator.CurrentFloor != request.TargetFloor);
-        context.TransitionToState(new LoadingState());
-        await context.ProcessRequest(request);
+
+        // Now we know this request is completed, remove it from the main queue
+        context._requests.Remove(request); // Remove it only after drop-off
+       
+        // Transition back to Idle after completing all drop-offs
+        if (!context._onboardRequests.Any())
+        {
+            context.TransitionToState(new IdleState());
+            await context.ProcessNextRequest();
+        }
+    }
+
+    private async Task DropOffPassengers(ElevatorStateContext context, Request request)
+    {
+        context.Elevator.CurrentCapacity -= request.ObjectWaiting;
+        Console.WriteLine($"Dropped off {request.ObjectWaiting} passengers at floor {request.TargetFloor}");
+        await Task.Delay(500); // Simulate unloading time
     }
 }
