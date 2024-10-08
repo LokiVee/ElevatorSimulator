@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-internal class ElevatorStateContext 
+public class ElevatorStateContext 
 {
     public readonly Elevator Elevator;
-    private readonly Action _stateHasChanged;
-    private IState _currentState;
-    internal List<Request> _requests = new List<Request>();
-    private Request _currentRequest;
-    internal List<Request> _onboardRequests = new List<Request>(); // Requests for passengers already picked up
+    public readonly Action _stateHasChanged;
+    public IState _currentState;
+    public List<Request> _requests = new List<Request>();
+    public Request _currentRequest;
+    public List<Request> _onboardRequests = new List<Request>(); // Requests for passengers already picked up
     public ElevatorStateContext(Elevator elevator, Action stateHasChanged)
     {
         Elevator = elevator;
@@ -40,8 +40,6 @@ internal class ElevatorStateContext
         _stateHasChanged.Invoke();
     }
 
-
-
     public bool CanHandleRequest(Request request)
     {
         ////Do the check
@@ -50,22 +48,19 @@ internal class ElevatorStateContext
         return capacityCheck;
 
     }
-
-    public async Task HandleRequest(Request request)
-    {
-        _requests.Add(request);
-
-        // Log the incoming request
-        Console.WriteLine($"{DateTime.Now} - Processing request {_requests.Count} on {Elevator}");
-        await ProcessNextRequest();
-    }
-
+  public async Task HandleRequest(Request request)
+        {
+            _requests.Add(request);
+            if (_currentState is IdleState)
+            {
+                await ProcessNextRequest();
+            }
+        }
     //BUG: Not checking with loading and unloading for more requests on the same floor.  This must be fixed in the state flow
     public async Task ProcessRequest(Request request)
     {
         await _currentState.ProcessRequest(this, request);
     }
-
     public async Task ProcessNextRequest()
     {
         if (_currentState is IdleState && _requests.Any())
@@ -75,11 +70,19 @@ internal class ElevatorStateContext
             await ProcessRequest(_currentRequest);
         }
     }
-
     private Request FindNextOptimalRequest()
     {
         // Return the closest request by current floor, prioritizing direction alignment (MovingUp or MovingDown)
         return _requests.OrderBy(r => Math.Abs(r.CurrentFloor - Elevator.CurrentFloor)).First();
+    }
+
+    public void RemoveRequest(Request request)
+    {
+        _requests.Remove(request);
+        if (!_requests.Any() && !_onboardRequests.Any())
+        {
+            TransitionToState(new IdleState());
+        }
     }
 
 }

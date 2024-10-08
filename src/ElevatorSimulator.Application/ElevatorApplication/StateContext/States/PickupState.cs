@@ -1,7 +1,7 @@
 ﻿using ElevatorSimulator.Domain.Enums;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States;
-internal class PickupState : IState
+public class PickupState : IState
 {
     private readonly ElevatorStatus _direction;
 

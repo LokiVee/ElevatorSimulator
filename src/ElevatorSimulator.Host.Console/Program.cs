@@ -68,7 +68,7 @@ internal class Program
                 var notificaiton = new ElevatorRequestCreate(new Request
                 {
                     CurrentFloor = -1,
-                    TargetFloor = 6,
+                    TargetFloor = 3,
                     ObjectWaiting = 5
                 });
                 await _mediator.Publish(notificaiton);

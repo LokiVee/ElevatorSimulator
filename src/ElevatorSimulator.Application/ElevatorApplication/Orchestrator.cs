@@ -116,7 +116,7 @@ internal class Orchestrator : IHostedLifecycleService
         var temp = new List<Request>();  //Some logic to split main request to multiple
         foreach (var req in temp)
         {
-            var elevator = GetBestElevator(req);
+            var elevator = FindBestElevator(req);
             if (elevator == null)
             {
                 await SplitRequest(request);
@@ -132,11 +132,5 @@ internal class Orchestrator : IHostedLifecycleService
         await stateContext.HandleRequest(request);
     }
 
-    public Elevator? GetBestElevator(Request request)
-    {
-        //Do some nice logic here
-        var result = _elevatorContext.Values.FirstOrDefault(i => i.CanHandleRequest(request)); 
-        //Other filters of moving up already and stuff like that as bonus points
-        return result?.Elevator;
-    }
+ 
 }

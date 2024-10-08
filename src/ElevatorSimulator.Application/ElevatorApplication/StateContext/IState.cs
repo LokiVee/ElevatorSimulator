@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-internal interface IState
+ public interface IState
 {
     Task EnterState(ElevatorStateContext context);
     Task ExitState(ElevatorStateContext context);

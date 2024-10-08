@@ -1,7 +1,7 @@
 ﻿using ElevatorSimulator.Domain.Enums;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States;
-internal class IdleState : IState
+public class IdleState : IState
 {
     public async Task EnterState(ElevatorStateContext context)
     {
