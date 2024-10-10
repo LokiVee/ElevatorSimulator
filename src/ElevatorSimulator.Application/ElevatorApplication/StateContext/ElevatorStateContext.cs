@@ -6,15 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-internal class ElevatorStateContext
+public class ElevatorStateContext : IElevatorStateContext
 {
-    public readonly Elevator Elevator;
-    private readonly Action _stateHasChanged;
-    private IState _currentState;
-    internal List<Request> _requests = new List<Request>();
-    private Request _currentRequest;
+    public IElevator Elevator { get; set; }
 
-    public ElevatorStateContext(Elevator elevator, Action stateHasChanged)
+    public readonly Action _stateHasChanged;
+
+    public IState _currentState;
+    public List<Request> _requests { get; set; } = new List<Request>();
+    public Request _currentRequest { get; set; }
+    public List<Request> _onboardRequests { get; set; } = new List<Request>(); // Requests for passengers already picked up
+    public ElevatorStateContext(IElevator elevator, Action stateHasChanged)
     {
         Elevator = elevator;
         _stateHasChanged = stateHasChanged;
@@ -36,39 +38,59 @@ internal class ElevatorStateContext
 
     public void StateHasChanged()
     {
-        Elevator.CurrentCapacity = _currentRequest?.ObjectWaiting ?? 0;
         _stateHasChanged.Invoke();
     }
 
-
-
     public bool CanHandleRequest(Request request)
     {
-        //Do the check
-        return request.ObjectWaiting < Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);
-    }
+        var capacityCheck = request.ObjectWaiting <= Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);
+        return capacityCheck;
 
+    }
     public async Task HandleRequest(Request request)
     {
         _requests.Add(request);
-        //TODO this thightly couples and must be removed
-        Console.WriteLine($"{DateTime.Now} - Process request {_requests.Count} on {Elevator}");
-        await ProcessNextRequest();
+        if (_currentState is IdleState)
+        {
+            await ProcessNextRequest();
+        }
     }
 
-    //BUG: Not checking with loading and unloading for more requests on the same floor.  This must be fixed in the state flow
     public async Task ProcessRequest(Request request)
     {
         await _currentState.ProcessRequest(this, request);
     }
-
+    /// <summary>
+    ///  Processing of the multiple requests 
+    /// </summary>
+    /// <returns></returns>
     public async Task ProcessNextRequest()
     {
         if (_currentState is IdleState && _requests.Any())
         {
-            _currentRequest = _requests.First();
-            _requests.RemoveAt(0);
+            // Sort requests by the most efficient route (e.g., in the current direction of travel)
+            _currentRequest = FindNextOptimalRequest();
             await ProcessRequest(_currentRequest);
         }
+    }
+
+    /// <summary>
+    ///Return the closest request by current floor, prioritizing direction alignment (MovingUp or MovingDown)
+    /// </summary>
+    /// <returns></returns>
+    private Request FindNextOptimalRequest()
+    {
+   
+        return _requests.OrderBy(r => Math.Abs(r.CurrentFloor - Elevator.CurrentFloor)).First();
+    }
+
+    /// <summary>
+    /// This method will remove the request from the On board requests and the original request list
+    /// </summary>
+    /// <param name="request"></param>
+    public void RemoveRequest(Request request)
+    {
+        _requests.Remove(request);
+        _onboardRequests.Remove(request);
     }
 }

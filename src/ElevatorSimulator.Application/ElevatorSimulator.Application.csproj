@@ -16,4 +16,8 @@
     <ProjectReference Include="..\ElevatorSimulator.Domain\ElevatorSimulator.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Requests\Commands\" />
+  </ItemGroup>
+
 </Project>

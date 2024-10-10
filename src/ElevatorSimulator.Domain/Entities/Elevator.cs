@@ -1,7 +1,7 @@
 ﻿using ElevatorSimulator.Domain.Enums;
 
 namespace ElevatorSimulator.Domain.Entities;
-public abstract class Elevator
+public abstract class Elevator : IElevator
 {
     public int MaxCapacity { get; set; }
     public int CurrentFloor { get; set; } = 0;

@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-internal interface IState
+ public interface IState
 {
-    Task EnterState(ElevatorStateContext context);
-    Task ExitState(ElevatorStateContext context);
-    Task ProcessRequest(ElevatorStateContext context, Request request);
+    Task EnterState(IElevatorStateContext context);
+    Task ExitState(IElevatorStateContext context);
+    Task ProcessRequest(IElevatorStateContext context, Request request);
 }
