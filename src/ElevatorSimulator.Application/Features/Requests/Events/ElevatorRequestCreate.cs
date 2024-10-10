@@ -12,7 +12,7 @@ public class ElevatorRequestCreate : INotification
     public Request Request { get; }
 }
 
-internal class ElevatorRequestCreateHandler : INotificationHandler<ElevatorRequestCreate>
+public class ElevatorRequestCreateHandler : INotificationHandler<ElevatorRequestCreate>
 {
     private readonly Orchestrator _orchestrator;
 
@@ -20,8 +20,8 @@ internal class ElevatorRequestCreateHandler : INotificationHandler<ElevatorReque
     {
         _orchestrator = orchestrator;
     }
-    public Task Handle(ElevatorRequestCreate notification, CancellationToken cancellationToken)
+    public async Task Handle(ElevatorRequestCreate notification, CancellationToken cancellationToken)
     {
-        return _orchestrator.HandleRequest(notification, cancellationToken);
+        await _orchestrator.HandleRequest(notification, CancellationToken.None);
     }
 }

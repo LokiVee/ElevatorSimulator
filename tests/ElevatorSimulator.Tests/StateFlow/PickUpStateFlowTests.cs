@@ -23,7 +23,7 @@ namespace ElevatorSimulator.Tests.StateFlow
             _mockContext = new Mock<IElevatorStateContext>();
             _mockElevator = new Mock<IElevator>();
             _mockContext.SetupGet(c => c.Elevator).Returns(_mockElevator.Object);
-            _pickupState = new PickupState(ElevatorStatus.MovingUp, 5);
+            _pickupState = new PickupState();
         }
 
         [Test]

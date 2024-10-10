@@ -7,6 +7,7 @@ public class IdleState : IState
     {
         context.Elevator.Status = ElevatorStatus.Idle;
         await Task.Delay(400);
+        await context.ProcessNextRequest();
     }
 
     public Task ExitState(IElevatorStateContext context)
@@ -17,7 +18,7 @@ public class IdleState : IState
     public Task ProcessRequest(IElevatorStateContext context, Request request)
     {
         var direction = ElevatorStatus.MovingUp;
-        if (request.CurrentFloor < context.Elevator.CurrentFloor)
+        if (request.CurrentFloor < context.Elevator.CurrentFloor) 
             direction = ElevatorStatus.MovingDown;
         context.TransitionToState(new MovingState(direction, request.CurrentFloor, true));
         return context.ProcessRequest(request);

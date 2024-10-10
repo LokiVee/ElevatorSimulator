@@ -1,5 +1,4 @@
 ﻿using ElevatorSimulator.Application;
-using ElevatorSimulator.Application.Features.Requests.Commands;
 using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain;
 using ElevatorSimulator.Domain.Entities;
@@ -16,14 +15,15 @@ internal class Program
     private static int _menuLineCount;
     private static IMediator _mediator;
     private static IHost ApplicationHost;
+    private static string _currentMenuText = "To request elevator enter the current floor you are on.";
     static async Task Main(string[] args)
     {
         _statusUpdates = new StatusUpdates();
         var hostBuilder = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddDomain().AddApplication(_statusUpdates); 
-                    
+                    services.AddDomain().AddApplication(_statusUpdates);
+
                 });
         using (var cts = new CancellationTokenSource())
         {
@@ -35,6 +35,7 @@ internal class Program
             {
                 while (!cts.Token.IsCancellationRequested)
                 {
+                    _currentMenuText = "To request elevator enter the current floor you are on.";
                     //Do the menu print
                     DisplayMenu();
                     //Do the handle input
@@ -50,7 +51,7 @@ internal class Program
             {
                 await ApplicationHost.StopAsync();
             }
-            
+
         }
         ApplicationHost.Dispose();
         Console.WriteLine("Application has been stopped.");
@@ -60,44 +61,80 @@ internal class Program
 
     private static async Task HandleInput()
     {
-        var input = Console.ReadLine();
-        switch (input)
+        var floor = GetInput("floor");
+        if (floor == null)
         {
-            case "1":
-                //Did this with some menu thing
-                var notificaiton = new ElevatorRequestCreate(new Request
-                {
-                    CurrentFloor = -1,
-                    TargetFloor = 3,
-                    ObjectWaiting = 5
-                });
-                await _mediator.Publish(notificaiton);
-                break;
-            case "2":
-                //Did this with some menu thing
-                var notificaiton1 = new ElevatorRequestCreate(new Request
-                {
-                    CurrentFloor = 4,
-                    TargetFloor = 6,
-                    ObjectWaiting = 2
-                });
-                await _mediator.Publish(notificaiton1);
-                break;
+            await Task.Delay(2000);
+            return;
         }
+        _currentMenuText = "Enter the floor you want to go to.";
+        SetMenuText(_currentMenuText);
+
+        var targetfloor = GetInput("floor");
+        if (targetfloor == null)
+        {
+            await Task.Delay(2000); //Delay so person can see error message
+            return;
+        }
+        _currentMenuText = "Enter the number of people waiting.";
+        SetMenuText(_currentMenuText);
+
+        var persons = GetInput("persons");
+        if (persons == null)
+        {
+            await Task.Delay(2000); //Delay so person can see error message
+            return;
+        }
+
+        var notification = new ElevatorRequestCreate(new Request
+        {
+            CurrentFloor = floor.Value,
+            ObjectWaiting = persons.Value,
+            TargetFloor = targetfloor.Value
+        });
+
+        await _mediator.Publish(notification);
+    }
+
+    private static void SetMenuText(string text)
+    {
+        Console.SetCursorPosition(0, _statusLineCount);
+        Console.WriteLine(text.PadRight(Console.WindowWidth, ' '));
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.SetCursorPosition(0, InputLineNumber());
+    }
+
+    private static int? GetInput(string intutDetail)
+    {
+        var input = Console.ReadLine();
+
+        var didParse = int.TryParse(input, out int currentFloor);
+        if (!didParse)
+        {
+            Console.WriteLine($"{input} is not a valid {intutDetail} number");
+            return null;
+        }
+
+        return currentFloor;
     }
 
     private static void DisplayMenu()
     {
-        Console.SetCursorPosition(0, _statusLineCount);
-        Console.WriteLine("Your menu options here now.".PadRight(Console.WindowWidth, ' '));
-        Console.WriteLine("1. Add Request".PadRight(Console.WindowWidth, ' '));
+        SetMenuText(_currentMenuText);
+        //Cleaning up all the other text in console
         Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
-        _menuLineCount = 2;
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.WriteLine("".PadRight(Console.WindowWidth, ' '));
+        Console.SetCursorPosition(0, InputLineNumber());
+        _menuLineCount = 1;
     }
 
     public class StatusUpdates : IApplicationFeedback
     {
-        public Task StatusUpdated(IReadOnlyCollection<Elevator> elevators)
+        public Task StatusUpdated(IReadOnlyCollection<IElevator> elevators)
         {
             Console.SetCursorPosition(0, 0);
             foreach (var elevator in elevators)

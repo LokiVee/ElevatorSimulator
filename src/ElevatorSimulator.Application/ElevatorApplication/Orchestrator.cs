@@ -1,12 +1,11 @@
 ﻿using ElevatorSimulator.Application.ElevatorApplication.StateContext;
-using ElevatorSimulator.Application.Features.Requests.Commands;
 using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain.Entities;
 using ElevatorSimulator.Domain.Enums;
 using Microsoft.Extensions.Hosting;
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
-public class Orchestrator : IHostedLifecycleService
+public class Orchestrator : BackgroundService
 {
     private readonly IApplicationFeedback _applicationFeedback;
     public List<IElevator> _elevators = new List<IElevator>();
@@ -17,41 +16,8 @@ public class Orchestrator : IHostedLifecycleService
         _applicationFeedback = applicationFeedback;
     }
 
-    public Task StartingAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.CompletedTask;
-    }
-
-    public Task StartedAsync(CancellationToken cancellationToken)
-    {
-        Task.Run(() => ExecuteAsync(cancellationToken));
-        return Task.CompletedTask;
-    }
-
-    public Task StoppingAsync(CancellationToken cancellationToken)
-    {
-        //TODO: Make sure threads die
-        return Task.CompletedTask;
-    }
-
-    public Task StoppedAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    protected async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(2));
         //Load the data for elevators
         var elevator1 = new NormalElevator { Name = "1" };
         _elevators.Add(elevator1);
@@ -70,7 +36,7 @@ public class Orchestrator : IHostedLifecycleService
 
     public void StateHasChanged()
     {
-        _applicationFeedback.StatusUpdated((IReadOnlyCollection<Elevator>)_elevators.AsReadOnly());
+        _applicationFeedback.StatusUpdated((IReadOnlyCollection<IElevator>)_elevators.AsReadOnly());
     }
 
     public async Task HandleRequest(ElevatorRequestCreate notification, CancellationToken cancellationToken)
@@ -80,14 +46,8 @@ public class Orchestrator : IHostedLifecycleService
         {
             await _elevatorContext[bestElevator].HandleRequest(notification.Request);
         }
-        else
-        {
-            //OOPS Something is wrong need to handle this case if there is no elevator.
-            //Fix up the logic on your end
-            
-        }
     }
-    //BUG:  in finding optimal elevator
+
     public IElevator FindBestElevator(Request request)
     {
         // Filter elevators that can handle the request and are not busy
@@ -105,7 +65,7 @@ public class Orchestrator : IHostedLifecycleService
         // Find the closest elevator to the requested floor
         var bestElevator = availableElevators
             .OrderBy(elevator => Math.Abs(elevator.CurrentFloor - request.CurrentFloor))
-            .ThenBy(elevator => elevator.CurrentFloor) 
+            .ThenBy(elevator => elevator.CurrentFloor)
             .FirstOrDefault();
 
         return bestElevator;
@@ -125,12 +85,12 @@ public class Orchestrator : IHostedLifecycleService
                 await SubmitRequest(req, elevator);
         }
     }
-    
+
     private async Task SubmitRequest(Request request, IElevator elevator)
     {
         var stateContext = _elevatorContext[elevator];
         await stateContext.HandleRequest(request);
     }
 
- 
+
 }

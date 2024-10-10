@@ -41,6 +41,12 @@ namespace ElevatorSimulator.Tests
             _orchestrator._elevatorContext[_elevator2] = _mockElevatorStateContext2.Object;
         }
 
+
+        [TearDown]
+        public void Teardown()
+        {
+            _orchestrator.Dispose();
+        }
         [Test]
         public async Task GivenRequestOnGroundFloor_Elevator2ReturnedAsBest()
         {

@@ -8,27 +8,29 @@ using System.Threading.Tasks;
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States
 {
     /// <summary>
-    ///    Moving State - Used to move the elevator to the requested floor
+    ///    Moving State - Movement of the elevator to either the requested floor or the target floor
     /// </summary>
     public class MovingState : IState
     {
         public readonly ElevatorStatus _direction;
         private readonly bool _isPickup;
-        private readonly int _targetFloor;
-        public MovingState(ElevatorStatus direction, int targetFloor, bool isPickup)
+        private readonly int _delay;
+        private readonly int _gotoFloor;
+        public MovingState(ElevatorStatus direction, int gotoFloor, bool isPickup, int delay = 3000)
         {
             if (direction != ElevatorStatus.MovingUp && direction != ElevatorStatus.MovingDown)
                 throw new ArgumentException("Invalid direction for moving state.");
 
             _direction = direction;
             _isPickup = isPickup;
-            _targetFloor = targetFloor;
+            _delay = delay;
+            _gotoFloor = gotoFloor;
 
         }
-        public async Task EnterState(IElevatorStateContext context)
+        public Task EnterState(IElevatorStateContext context)
         {
             context.Elevator.Status = _direction;
-            await Task.Delay(400);
+            return Task.CompletedTask;
         }
 
         public Task ExitState(IElevatorStateContext context)
@@ -38,9 +40,10 @@ namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States
 
         public async Task ProcessRequest(IElevatorStateContext context, Request request)
         {
+
             do
             {
-                await Task.Delay(3000); // Simulate movement delay
+                await Task.Delay(_delay); // Simulate movement delay
 
                 // Move the elevator in the current direction
                 if (_direction == ElevatorStatus.MovingUp)
@@ -51,22 +54,22 @@ namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States
                 // Update the Status for live updates 
                 context.StateHasChanged();
 
-            } while (context.Elevator.CurrentFloor != request.CurrentFloor);
+            } while (context.Elevator.CurrentFloor != _gotoFloor);
 
             // Determine if the Elevator will either be used to pick from current floor or Dropoff
 
             if (_isPickup)
             {
-                context.TransitionToState(new PickupState(_direction,_targetFloor));
+                context.TransitionToState(new PickupState());
             }
             else
             {
-                context.TransitionToState(new DropOffState(_direction));
+                context.TransitionToState(new DropOffState());
             }
             await context.ProcessRequest(request);
         }
 
-   }    
+    }
 }
 
 

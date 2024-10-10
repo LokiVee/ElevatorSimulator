@@ -1,4 +1,5 @@
 ﻿using ElevatorSimulator.Application.ElevatorApplication;
+using ElevatorSimulator.Application.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
@@ -11,6 +12,7 @@ public static class DependencyInjection
         services.AddMediatR(i =>
         {
             i.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            i.AddOpenBehavior(typeof(UnhandledExceptionNotificationBehaviour<,>));
         });
         var orchestrator = new Orchestrator(applicationFeedback);
         services.AddSingleton(orchestrator);
