@@ -4,8 +4,8 @@ namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States;
 public class PickupState : IState
 {
     private readonly ElevatorStatus _direction;
-
-    public PickupState(ElevatorStatus direction)
+    private readonly int _targetFloor;
+    public PickupState(ElevatorStatus direction, int targetFloor)
     {
         if (direction != ElevatorStatus.MovingUp && direction != ElevatorStatus.MovingDown)
             throw new ArgumentException("Invalid direction for moving state.");
@@ -13,60 +13,32 @@ public class PickupState : IState
         _direction = direction;
     }
 
-    public async Task EnterState(ElevatorStateContext context)
+    public async Task EnterState(IElevatorStateContext context)
     {
-        context.Elevator.Status = _direction;
-        await Task.Delay(400);
+        context.Elevator.Status = ElevatorStatus.PickingUp;
+        await Task.Delay(3000);
     }
 
-    public Task ExitState(ElevatorStateContext context)
+    public Task ExitState(IElevatorStateContext context)
     {
         return Task.CompletedTask;
     }
 
-    public async Task ProcessRequest(ElevatorStateContext context, Request request)
+    public async Task ProcessRequest(IElevatorStateContext context, Request request)
     {
-        do
-        {
-            await Task.Delay(3000); // Simulate movement delay
+        
+            // Pick up passengers once we reach the requested floor
+            await PickupPassengers(context, request);
 
-            // Move the elevator in the current direction
-            if (_direction == ElevatorStatus.MovingUp)
-                context.Elevator.CurrentFloor++;
-            else
-                context.Elevator.CurrentFloor--;
-
-            context.StateHasChanged();
-
-            // Check if there's a request to pick up on this floor, in the same direction
-            var intermediateRequest = context._requests
-                .FirstOrDefault(r => r.CurrentFloor == context.Elevator.CurrentFloor &&
-                                     CanPickupIntermediateRequest(context, r));
-
-            if (intermediateRequest != null && context.CanHandleRequest(intermediateRequest))
-            {
-                // Stop to pick up additional passengers and handle the request
-                context._requests.Remove(intermediateRequest);
-                await PickupPassengers(context, intermediateRequest);
-            }
-
-        } while (context.Elevator.CurrentFloor != request.CurrentFloor);
-
-        // Pick up passengers once we reach the requested floor
-        await PickupPassengers(context, request);
-
-        // After pickup, proceed with onboard requests and drop-offs
-        var direction = request.TargetFloor > context.Elevator.CurrentFloor
-            ? ElevatorStatus.MovingUp
-            : ElevatorStatus.MovingDown;
-
-        context.TransitionToState(new DropOffState(direction));
+            // After pickup, transition back to MovingState to continue to the target floor
+            context.TransitionToState(new MovingState(_direction, _targetFloor, false));
         await context.ProcessRequest(request);
+
     }
 
 
 
-    private bool CanPickupIntermediateRequest(ElevatorStateContext context, Request request)
+    private bool CanPickupIntermediateRequest(IElevatorStateContext context, Request request)
     {
         // Only pick up requests that are moving in the same direction
         if (_direction == ElevatorStatus.MovingUp && request.TargetFloor > request.CurrentFloor)
@@ -78,7 +50,7 @@ public class PickupState : IState
         return false;
     }
 
-    private async Task PickupPassengers(ElevatorStateContext context, Request request)
+    private async Task PickupPassengers(IElevatorStateContext context, Request request)
     {
         context._onboardRequests.Add(request); // Add the picked-up request to the onboard list
         context.Elevator.CurrentCapacity += request.ObjectWaiting;

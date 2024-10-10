@@ -6,11 +6,11 @@ using ElevatorSimulator.Domain.Enums;
 using Microsoft.Extensions.Hosting;
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
-internal class Orchestrator : IHostedLifecycleService
+public class Orchestrator : IHostedLifecycleService
 {
     private readonly IApplicationFeedback _applicationFeedback;
-    private List<Elevator> _elevators = new List<Elevator>();
-    private Dictionary<Elevator, ElevatorStateContext> _elevatorContext = new Dictionary<Elevator, ElevatorStateContext>();
+    public List<IElevator> _elevators = new List<IElevator>();
+    public Dictionary<IElevator, IElevatorStateContext> _elevatorContext = new Dictionary<IElevator, IElevatorStateContext>();
 
     public Orchestrator(IApplicationFeedback applicationFeedback)
     {
@@ -70,7 +70,7 @@ internal class Orchestrator : IHostedLifecycleService
 
     public void StateHasChanged()
     {
-        _applicationFeedback.StatusUpdated(_elevators.AsReadOnly());
+        _applicationFeedback.StatusUpdated((IReadOnlyCollection<Elevator>)_elevators.AsReadOnly());
     }
 
     public async Task HandleRequest(ElevatorRequestCreate notification, CancellationToken cancellationToken)
@@ -88,7 +88,7 @@ internal class Orchestrator : IHostedLifecycleService
         }
     }
     //BUG:  in finding optimal elevator
-    public Elevator FindBestElevator(Request request)
+    public IElevator FindBestElevator(Request request)
     {
         // Filter elevators that can handle the request and are not busy
         var availableElevators = _elevators
@@ -126,7 +126,7 @@ internal class Orchestrator : IHostedLifecycleService
         }
     }
     
-    private async Task SubmitRequest(Request request, Elevator elevator)
+    private async Task SubmitRequest(Request request, IElevator elevator)
     {
         var stateContext = _elevatorContext[elevator];
         await stateContext.HandleRequest(request);

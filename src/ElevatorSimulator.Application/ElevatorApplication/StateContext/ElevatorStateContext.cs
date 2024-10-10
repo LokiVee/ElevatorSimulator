@@ -6,15 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
-public class ElevatorStateContext 
+public class ElevatorStateContext : IElevatorStateContext
 {
-    public readonly Elevator Elevator;
+    public IElevator Elevator { get; set; }
+
     public readonly Action _stateHasChanged;
+
     public IState _currentState;
-    public List<Request> _requests = new List<Request>();
-    public Request _currentRequest;
-    public List<Request> _onboardRequests = new List<Request>(); // Requests for passengers already picked up
-    public ElevatorStateContext(Elevator elevator, Action stateHasChanged)
+    public List<Request> _requests { get; set; }
+    public Request _currentRequest { get; set; }
+    public List<Request> _onboardRequests { get; set; } // Requests for passengers already picked up
+    public ElevatorStateContext(IElevator elevator, Action stateHasChanged)
     {
         Elevator = elevator;
         _stateHasChanged = stateHasChanged;
@@ -48,14 +50,14 @@ public class ElevatorStateContext
         return capacityCheck;
 
     }
-  public async Task HandleRequest(Request request)
+    public async Task HandleRequest(Request request)
+    {
+        _requests.Add(request);
+        if (_currentState is IdleState)
         {
-            _requests.Add(request);
-            if (_currentState is IdleState)
-            {
-                await ProcessNextRequest();
-            }
+            await ProcessNextRequest();
         }
+    }
     //BUG: Not checking with loading and unloading for more requests on the same floor.  This must be fixed in the state flow
     public async Task ProcessRequest(Request request)
     {
