@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Configuration;
 namespace ElevatorSimulator.Tests
 {
     internal class OrchestratorTests
@@ -20,13 +20,17 @@ namespace ElevatorSimulator.Tests
         private Mock<IElevatorStateContext> _mockElevatorStateContext2;
         private IElevator _elevator1;
         private IElevator _elevator2;
+        private Mock<IConfiguration> _mockConfiguration;
 
         [SetUp]
         public void Setup()
         {
 
             _mockApplicationFeedback = new Mock<IApplicationFeedback>();
-            _orchestrator = new Orchestrator(_mockApplicationFeedback.Object);
+            _mockConfiguration = new Mock<IConfiguration>();
+            // Setup mock configuration values
+            _mockConfiguration.Setup(config => config["AppSettings:NumberOfElevators"]).Returns("2");
+            _orchestrator = new Orchestrator(_mockApplicationFeedback.Object, _mockConfiguration.Object);
 
             _elevator1 = new Mock<IElevator>().Object;
             _elevator2 = new Mock<IElevator>().Object;

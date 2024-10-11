@@ -23,13 +23,13 @@ internal class Program
         _statusUpdates = new StatusUpdates();
         var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
         _configuration = builder.Build();
         var hostBuilder = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddDomain().AddApplication(_statusUpdates);
+                    services.AddDomain().AddApplication(_statusUpdates, _configuration);
 
                 });
         using (var cts = new CancellationTokenSource())
@@ -43,14 +43,13 @@ internal class Program
                 while (!cts.Token.IsCancellationRequested)
                 {
                     _currentMenuText = "To request elevator enter the current floor you are on.";
-                    //Do the menu print
+                    //Display the menu print
                     DisplayMenu();
-                    //Do the handle input
-                    _ = HandleInput();
-                    //Do the clear menu section 
+                    //Display the handle input
+                    await HandleInput();
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException cv)
             {
                 // This will be thrown when the cancellation token is set and the loop is broken  
             }
@@ -111,14 +110,14 @@ internal class Program
         Console.SetCursorPosition(0, InputLineNumber());
     }
 
-    private static int? GetInput(string intutDetail)
+    private static int? GetInput(string inputDetail)
     {
         var input = Console.ReadLine();
 
         var didParse = int.TryParse(input, out int currentFloor);
         if (!didParse)
         {
-            Console.WriteLine($"{input} is not a valid {intutDetail} number");
+            Console.WriteLine($"{input} is not a valid {inputDetail} number");
             return null;
         }
 
@@ -139,10 +138,14 @@ internal class Program
         _menuLineCount = 1;
     }
 
+
+    private static SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
     public class StatusUpdates : IApplicationFeedback
     {
         public Task StatusUpdated(IReadOnlyCollection<IElevator> elevators)
         {
+            //We want to ensure that one thread at a time updates the UI or it will look like the application is glitching out
+            _semaphoreSlim.Wait();
             Console.SetCursorPosition(0, 0);
             foreach (var elevator in elevators)
             {
@@ -155,6 +158,8 @@ internal class Program
             //Can do cursor lines and everything in here
             DisplayMenu();
             Console.SetCursorPosition(0, InputLineNumber()); //Make sure the input line number is back in the correct line after update
+
+            _semaphoreSlim.Release();
             return Task.CompletedTask;
         }
     }

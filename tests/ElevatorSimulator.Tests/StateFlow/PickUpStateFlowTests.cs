@@ -8,13 +8,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Configuration;
 namespace ElevatorSimulator.Tests.StateFlow
 {
     internal class PickUpStateFlowTests
     {
         private Mock<IElevatorStateContext> _mockContext;
         private Mock<IElevator> _mockElevator;
+        private Mock<IConfiguration> _mockConfiguration;
         private PickupState _pickupState;
 
         [SetUp]
@@ -24,6 +25,10 @@ namespace ElevatorSimulator.Tests.StateFlow
             _mockElevator = new Mock<IElevator>();
             _mockContext.SetupGet(c => c.Elevator).Returns(_mockElevator.Object);
             _pickupState = new PickupState();
+
+            // Setup mock configuration values
+            _mockConfiguration.Setup(config => config["AppSettings:NumberOfElevators"]).Returns("2");
+
         }
 
         [Test]

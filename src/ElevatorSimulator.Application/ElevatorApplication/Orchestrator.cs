@@ -12,10 +12,10 @@ public class Orchestrator : BackgroundService
     public List<IElevator> _elevators = new List<IElevator>();
     public Dictionary<IElevator, IElevatorStateContext> _elevatorContext = new Dictionary<IElevator, IElevatorStateContext>();
     private readonly IConfiguration _configuration;
-    public Orchestrator(IApplicationFeedback applicationFeedback)
+    public Orchestrator(IApplicationFeedback applicationFeedback,IConfiguration configuration)
     {
         _applicationFeedback = applicationFeedback;
-
+        _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,25 +29,70 @@ public class Orchestrator : BackgroundService
             var elevatorContext = new ElevatorStateContext(elevator, StateHasChanged);
             _elevatorContext.Add(elevator, elevatorContext);
         }
-        //var appName = _configuration["AppSettings:NumberOfElevators"];
+        var appName = _configuration["AppSettings:NumberOfElevators"];
         StateHasChanged();
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
+
+    /// <summary>
+    /// Used to Handle max capacity of the elevator, if the max is reached the load must be distributed
+    /// </summary>
+    /// <param name="notification"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task HandleRequest(ElevatorRequestCreate notification, CancellationToken cancellationToken)
+    {
+        var elevatorCapacity = _elevators.Max(i => i.MaxCapacity);
+        if (notification.Request.ObjectWaiting > elevatorCapacity)
+        {
+            var objectsWaiting = notification.Request.ObjectWaiting;
+            var requestTasks = new List<Task>();
+            do
+            {
+                var requestObjects = objectsWaiting > elevatorCapacity ? elevatorCapacity : objectsWaiting;
+                objectsWaiting -= requestObjects;
+                var request = new Request
+                {
+                    CurrentFloor = notification.Request.CurrentFloor,
+                    TargetFloor = notification.Request.TargetFloor,
+                    ObjectWaiting = requestObjects
+                };
+                requestTasks.Add(AssignRequest(request));
+            } while (objectsWaiting > 0);
+            await Task.WhenAll(requestTasks);
+        }
+        else
+        {
+            await AssignRequest(notification.Request);
+        }
+    }
+
+    private async Task AssignRequest(Request request)
+    {
+        var bestElevator = FindBestElevator(request);
+        if (bestElevator != null)
+        {
+            await _elevatorContext[bestElevator].HandleRequest(request);
+        }
+    }
+
+
+    /// <summary>
+    /// Every time an update is done via the state flow this will update the status of the elevators
+    /// </summary>
     public void StateHasChanged()
     {
         _applicationFeedback.StatusUpdated((IReadOnlyCollection<IElevator>)_elevators.AsReadOnly());
     }
 
-    public async Task HandleRequest(ElevatorRequestCreate notification, CancellationToken cancellationToken)
-    {
-        var bestElevator = FindBestElevator(notification.Request);
-        if (bestElevator != null)
-        {
-            await _elevatorContext[bestElevator].HandleRequest(notification.Request);
-        }
-    }
+
+    /// <summary>
+    /// Will find the nearest elevator based on the distance and state of the elevator
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
 
     public IElevator FindBestElevator(Request request)
     {
@@ -71,27 +116,5 @@ public class Orchestrator : BackgroundService
 
         return bestElevator;
     }
-
-    private async Task SplitRequest(Request request)
-    {
-        var temp = new List<Request>();  //Some logic to split main request to multiple
-        foreach (var req in temp)
-        {
-            var elevator = FindBestElevator(req);
-            if (elevator == null)
-            {
-                await SplitRequest(request);
-            }
-            else
-                await SubmitRequest(req, elevator);
-        }
-    }
-
-    private async Task SubmitRequest(Request request, IElevator elevator)
-    {
-        var stateContext = _elevatorContext[elevator];
-        await stateContext.HandleRequest(request);
-    }
-
 
 }
