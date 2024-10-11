@@ -89,7 +89,6 @@ dotnet test
 Test cases include:
 - Verifying optimal pathing for elevators.
 - Ensuring passengers are picked up and dropped off in the shortest time possible.
-- Simulating edge cases, such as a high number of simultaneous requests.
 
 ---
 
