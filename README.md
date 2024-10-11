@@ -88,8 +88,8 @@ dotnet test
 
 Test cases include:
 - Verifying optimal pathing for elevators.
-- Ensuring passengers are picked up and dropped off in the shortest time possible.
-
+- Verifying The different states of the elevator
+- Check the Elevator moves to the target floor
 ---
 
 
