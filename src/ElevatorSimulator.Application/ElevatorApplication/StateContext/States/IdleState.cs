@@ -1,6 +1,9 @@
 ﻿using ElevatorSimulator.Domain.Enums;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext.States;
+/// <summary>
+/// IdleState - Used to indicate the elevator is ready to be in motion.
+/// </summary>
 public class IdleState : IState
 {
     public async Task EnterState(IElevatorStateContext context)

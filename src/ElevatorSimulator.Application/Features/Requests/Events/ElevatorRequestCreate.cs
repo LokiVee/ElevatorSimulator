@@ -13,8 +13,7 @@ public class ElevatorRequestCreate : INotification
 }
 
 /// <summary>
-/// 
-/// Mediaotr Handler used for to handle multiple requests 
+/// MediatR Handler used for to handle multiple requests 
 /// </summary>
 public class ElevatorRequestCreateHandler : INotificationHandler<ElevatorRequestCreate>
 {

@@ -8,6 +8,9 @@ using Microsoft.Extensions.Hosting;
 
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
+/// <summary>
+/// Building Orchestrator is used to manage the elevators and the requests.
+/// </summary>
 public class Orchestrator : BackgroundService
 {
     private readonly IApplicationFeedback _applicationFeedback;

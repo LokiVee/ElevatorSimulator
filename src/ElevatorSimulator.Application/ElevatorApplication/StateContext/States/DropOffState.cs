@@ -25,7 +25,7 @@ public class DropOffState : IState
 
         // Drop off passengers at the target floor
         context.RemoveRequest(request);
-        // After drop off, transition to IdleState or another appropriate state
+        // After drop off, transition to IdleState or another appropriate state.
         context.TransitionToState(new IdleState());
 
     }
