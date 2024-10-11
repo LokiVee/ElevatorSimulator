@@ -24,8 +24,8 @@ This project simulates a complex **elevator system** operating in a large buildi
 - **Multi-elevator management**: Manages several elevators simultaneously in a large building.
 - **Optimized passenger handling**: Reduces wait and travel times through efficient request prioritization.
 - **Dynamic request handling**: Adjusts elevator routes in real time to account for new requests.
-  **Real-time updates**: Provides immediate feedback to the user.
-  **Interactive Elevator Support**: Provides immediate feedback to the user.
+- **Real-time updates**: Provides immediate feedback to the user.
+- **Interactive Elevator Support**: Provides immediate feedback to the user.
 
 ---
 
@@ -41,12 +41,12 @@ This project simulates a complex **elevator system** operating in a large buildi
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/elevator-system.git
+   git clone [https://github.com/LokiVee/ElevatorSimulator.git]
    ```
 
 2. Navigate to the project directory:
    ```bash
-   cd elevator-system
+   cd ElevatorSimulator
    ```
 
 3. Open the solution file (`.sln`) in your IDE (Visual Studio ).
