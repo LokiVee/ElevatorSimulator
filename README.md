@@ -98,5 +98,7 @@ Test cases include:
 For questions or issues, please contact:
 
 - **Email**:vijay.manikkam766@gmail.com
-- **GitHub**: [LokiVee](https://github.com/your-username)
+- **GitHub**: [LokiVee] (https://github.com/LokiVee/ElevatorSimulator)
 
+
+[![SimulationUnitTestBuilds](https://github.com/LokiVee/ElevatorSimulator/actions/workflows/dotnet.yml/badge.svg)](https://github.com/LokiVee/ElevatorSimulator/actions/workflows/dotnet.yml)
