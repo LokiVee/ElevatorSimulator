@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Domain.Entities;
+/// <summary>
+/// The Request for each elevator request within the simulation
+/// </summary>
 public class Request
 {
     public int CurrentFloor { get; set; }

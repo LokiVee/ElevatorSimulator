@@ -72,5 +72,30 @@ namespace ElevatorSimulator.Tests
             // Assert
             Assert.AreEqual(_elevator1, bestElevator);
         }
+
+        [Test]
+        public async Task GivenRequestOnGroundFloor_ElevatorMovingUp_ReturnsNearestElevator()
+        {
+            // Arrange
+            var request = new Request { CurrentFloor = 3, TargetFloor = 7 };
+
+            _mockElevatorStateContext1.Setup(c => c.CanHandleRequest(request)).Returns(true);
+            _mockElevatorStateContext2.Setup(c => c.CanHandleRequest(request)).Returns(true);
+
+            var mockElevator1 = Mock.Get(_elevator1);
+            var mockElevator2 = Mock.Get(_elevator2);
+
+            mockElevator1.SetupGet(e => e.CurrentFloor).Returns(2);
+            mockElevator1.SetupGet(e => e.Status).Returns(ElevatorStatus.MovingUp);
+
+            mockElevator2.SetupGet(e => e.CurrentFloor).Returns(5);
+            mockElevator2.SetupGet(e => e.Status).Returns(ElevatorStatus.MovingUp);
+
+            // Act
+            var bestElevator = _orchestrator.FindBestElevator(request);
+
+            // Assert
+            Assert.AreEqual(_elevator1, bestElevator);
+        }
     }
 }

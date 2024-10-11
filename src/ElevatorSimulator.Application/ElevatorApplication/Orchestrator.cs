@@ -54,7 +54,7 @@ public class Orchestrator : BackgroundService
         // Filter elevators that can handle the request and are not busy
         var availableElevators = _elevators
             .Where(elevator => _elevatorContext[elevator].CanHandleRequest(request) &&
-                              elevator.Status == ElevatorStatus.Idle) // Check if elevator is idle
+                              (elevator.Status == ElevatorStatus.Idle || elevator.Status == ElevatorStatus.MovingDown || elevator.Status == ElevatorStatus.MovingUp)) // Check if elevator is idle
             .ToList();
 
         if (!availableElevators.Any())
