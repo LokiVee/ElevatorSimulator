@@ -15,7 +15,7 @@ A simulation program to model the movement and state management of elevators in 
 
 ## Introduction
 
-This project simulates a complex **elevator system** operating in a large building, handling passenger requests and optimizing transportation to reduce wait and travel times. It is built using **C#** and designed with **Solid principles** to make the system modular and maintainable, while ensuring optimal performance. The simulation manages multiple elevators, efficiently picking up and dropping off passengers based on real-time input.
+This project simulates a complex **elevator system** operating in a large building, handling passenger requests and optimizing transportation to reduce wait and travel times. It is built using **C#** and designed with **Solid principles** to make the system modular and maintainable, while ensuring optimal performance. The simulation manages multiple elevators, efficiently picking up and dropping off passengers based on real-time input. The solution makes use of a number of different patterns from the State Pattern, CQRS and factory pattern to ensure the application is maintainable and scalable 
 
 ---
 
@@ -23,7 +23,7 @@ This project simulates a complex **elevator system** operating in a large buildi
 
 - **Multi-elevator management**: Manages several elevators simultaneously in a large building.
 - **Optimized passenger handling**: Reduces wait and travel times through efficient request prioritization.
-- **Dynamic request handling**: Adjusts elevator routes in real time to account for new requests.
+- **Passenger Limit Handling**:Consider the maximum passenger limit for each elevator, Will distribute the passengers via the different elevators.
 - **Real-time updates**: Provides immediate feedback to the user.
 - **Interactive Elevator Support**: Provides immediate feedback to the user.
 
