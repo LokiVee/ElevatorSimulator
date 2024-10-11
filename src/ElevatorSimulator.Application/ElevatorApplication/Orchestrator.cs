@@ -2,8 +2,10 @@
 using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain.Entities;
 using ElevatorSimulator.Domain.Enums;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
 public class Orchestrator : BackgroundService
@@ -12,16 +14,21 @@ public class Orchestrator : BackgroundService
     public List<IElevator> _elevators = new List<IElevator>();
     public Dictionary<IElevator, IElevatorStateContext> _elevatorContext = new Dictionary<IElevator, IElevatorStateContext>();
     private readonly IConfiguration _configuration;
+
     public Orchestrator(IApplicationFeedback applicationFeedback,IConfiguration configuration)
     {
         _applicationFeedback = applicationFeedback;
         _configuration = configuration;
+
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         //Load the data for elevators
-        int numberOfElevators = 2;
+        var appSettingNumberOfElavators= _configuration["AppSettings:NumberOfElevators"];
+ 
+        var didParseNumberOfElavators = int.TryParse(appSettingNumberOfElavators, out int numberOfElevators);
+
         for (int i = 1; i <= numberOfElevators; i++)
         {
             var elevator = new NormalElevator { Name = i.ToString() };
@@ -29,7 +36,7 @@ public class Orchestrator : BackgroundService
             var elevatorContext = new ElevatorStateContext(elevator, StateHasChanged);
             _elevatorContext.Add(elevator, elevatorContext);
         }
-        var appName = _configuration["AppSettings:NumberOfElevators"];
+    
         StateHasChanged();
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
@@ -44,6 +51,7 @@ public class Orchestrator : BackgroundService
     /// <returns></returns>
     public async Task HandleRequest(ElevatorRequestCreate notification, CancellationToken cancellationToken)
     {
+
         var elevatorCapacity = _elevators.Max(i => i.MaxCapacity);
         if (notification.Request.ObjectWaiting > elevatorCapacity)
         {
@@ -71,11 +79,19 @@ public class Orchestrator : BackgroundService
 
     private async Task AssignRequest(Request request)
     {
-        var bestElevator = FindBestElevator(request);
-        if (bestElevator != null)
+        try
         {
-            await _elevatorContext[bestElevator].HandleRequest(request);
+            var bestElevator = FindBestElevator(request);
+            if (bestElevator != null)
+            {
+                await _elevatorContext[bestElevator].HandleRequest(request);
+            }
         }
+        catch (Exception)
+        {
+            throw new InvalidOperationException("Something went wrong.No Elevator was available");
+        }
+       
     }
 
 
@@ -101,13 +117,6 @@ public class Orchestrator : BackgroundService
             .Where(elevator => _elevatorContext[elevator].CanHandleRequest(request) &&
                               (elevator.Status == ElevatorStatus.Idle || elevator.Status == ElevatorStatus.MovingDown || elevator.Status == ElevatorStatus.MovingUp)) // Check if elevator is idle
             .ToList();
-
-        if (!availableElevators.Any())
-        {
-            // If no elevators are available, you might want to return null or implement a waiting mechanism
-            return null;
-        }
-
         // Find the closest elevator to the requested floor
         var bestElevator = availableElevators
             .OrderBy(elevator => Math.Abs(elevator.CurrentFloor - request.CurrentFloor))

@@ -5,6 +5,7 @@ namespace ElevatorSimulator.Application.Pipeline;
 
 public class UnhandledExceptionNotificationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
 {
+    private readonly ILogger<UnhandledExceptionNotificationBehaviour<TRequest, TResponse>> _logger;
     public UnhandledExceptionNotificationBehaviour()
     {
     }
@@ -20,7 +21,8 @@ public class UnhandledExceptionNotificationBehaviour<TRequest, TResponse> : IPip
 #if DEBUG
             Debugger.Break();
 #endif
-            //Log error when logging is inserted
+
+            _logger.LogError(ex, $"Unhandled exception occurred while processing request {request}", typeof(TRequest).Name, request);
             throw;
         }
     }

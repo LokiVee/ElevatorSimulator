@@ -15,7 +15,6 @@ namespace ElevatorSimulator.Tests.StateFlow
     {
         private Mock<IElevatorStateContext> _mockContext;
         private Mock<IElevator> _mockElevator;
-        private Mock<IConfiguration> _mockConfiguration;
         private PickupState _pickupState;
 
         [SetUp]
@@ -25,9 +24,6 @@ namespace ElevatorSimulator.Tests.StateFlow
             _mockElevator = new Mock<IElevator>();
             _mockContext.SetupGet(c => c.Elevator).Returns(_mockElevator.Object);
             _pickupState = new PickupState();
-
-            // Setup mock configuration values
-            _mockConfiguration.Setup(config => config["AppSettings:NumberOfElevators"]).Returns("2");
 
         }
 

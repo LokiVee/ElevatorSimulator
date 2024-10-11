@@ -113,17 +113,27 @@ internal class Program
     private static int? GetInput(string inputDetail)
     {
         var input = Console.ReadLine();
-
+        var appSettingMaxNumberOfFloor = _configuration["AppSettings:MaxNumberOfFloors"];
+        var parseMaxNumberOfFloor = int.TryParse(appSettingMaxNumberOfFloor, out int maxFloors);
         var didParse = int.TryParse(input, out int currentFloor);
         if (!didParse)
         {
             Console.WriteLine($"{input} is not a valid {inputDetail} number");
+            return null;
+      
+        }
+        if (currentFloor >= maxFloors)
+        {
+            Console.WriteLine($"The {inputDetail} floor cannot be greater than {maxFloors}");
             return null;
         }
 
         return currentFloor;
     }
 
+    
+
+   
     private static void DisplayMenu()
     {
         SetMenuText(_currentMenuText);

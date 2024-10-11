@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using ElevatorSimulator.Application.Features.Requests.Events;
 namespace ElevatorSimulator.Tests
 {
     internal class OrchestratorTests
@@ -101,5 +102,8 @@ namespace ElevatorSimulator.Tests
             // Assert
             Assert.AreEqual(_elevator1, bestElevator);
         }
+
+       
+
     }
 }
