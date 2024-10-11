@@ -2,6 +2,7 @@
 using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain.Entities;
 using ElevatorSimulator.Domain.Enums;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace ElevatorSimulator.Application.ElevatorApplication;
@@ -10,25 +11,25 @@ public class Orchestrator : BackgroundService
     private readonly IApplicationFeedback _applicationFeedback;
     public List<IElevator> _elevators = new List<IElevator>();
     public Dictionary<IElevator, IElevatorStateContext> _elevatorContext = new Dictionary<IElevator, IElevatorStateContext>();
-
+    private readonly IConfiguration _configuration;
     public Orchestrator(IApplicationFeedback applicationFeedback)
     {
         _applicationFeedback = applicationFeedback;
+
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         //Load the data for elevators
-        var elevator1 = new NormalElevator { Name = "1" };
-        _elevators.Add(elevator1);
-        var elevator1Context = new ElevatorStateContext(elevator1, StateHasChanged);
-        _elevatorContext.Add(elevator1, elevator1Context);
-
-        var elevator2 = new NormalElevator { Name = "2" };
-        _elevators.Add(elevator2);
-        var elevator2Context = new ElevatorStateContext(elevator2, StateHasChanged);
-        _elevatorContext.Add(elevator2, elevator2Context);
-
+        int numberOfElevators = 2;
+        for (int i = 1; i <= numberOfElevators; i++)
+        {
+            var elevator = new NormalElevator { Name = i.ToString() };
+            _elevators.Add(elevator);
+            var elevatorContext = new ElevatorStateContext(elevator, StateHasChanged);
+            _elevatorContext.Add(elevator, elevatorContext);
+        }
+        //var appName = _configuration["AppSettings:NumberOfElevators"];
         StateHasChanged();
 
         await Task.Delay(Timeout.Infinite, stoppingToken);

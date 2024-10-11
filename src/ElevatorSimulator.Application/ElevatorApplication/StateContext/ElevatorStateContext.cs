@@ -6,6 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ElevatorSimulator.Application.ElevatorApplication.StateContext;
+/// <summary>
+/// ElevatorStateContext is representing the state of the elevator and the requests that are being processed
+/// Implementation of the State Pattern
+/// </summary>
 public class ElevatorStateContext : IElevatorStateContext
 {
     public IElevator Elevator { get; set; }
@@ -41,6 +45,11 @@ public class ElevatorStateContext : IElevatorStateContext
         _stateHasChanged.Invoke();
     }
 
+    /// <summary>
+    /// Checks if the Elevator has the capacity to handle the request
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     public bool CanHandleRequest(Request request)
     {
         var capacityCheck = request.ObjectWaiting <= Elevator.MaxCapacity - _requests.Sum(i => i.ObjectWaiting);

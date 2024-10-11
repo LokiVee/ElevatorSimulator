@@ -3,6 +3,7 @@ using ElevatorSimulator.Application.Features.Requests.Events;
 using ElevatorSimulator.Domain;
 using ElevatorSimulator.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -11,6 +12,7 @@ namespace ElevatorSimulator.Hosts.ConsoleApp;
 internal class Program
 {
     private static StatusUpdates _statusUpdates;
+    private static IConfiguration _configuration;
     private static int _statusLineCount;
     private static int _menuLineCount;
     private static IMediator _mediator;
@@ -19,6 +21,11 @@ internal class Program
     static async Task Main(string[] args)
     {
         _statusUpdates = new StatusUpdates();
+        var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+        _configuration = builder.Build();
         var hostBuilder = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {

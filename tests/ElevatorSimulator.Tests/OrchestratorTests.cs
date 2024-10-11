@@ -48,7 +48,7 @@ namespace ElevatorSimulator.Tests
             _orchestrator.Dispose();
         }
         [Test]
-        public async Task GivenRequestOnGroundFloor_Elevator2ReturnedAsBest()
+        public async Task GivenRequestOnGroundFloor_Elevator1ReturnedAsBest()
         {
 
             // Arrange
